@@ -1,10 +1,11 @@
 use alloy_consensus::Header;
 use reth_chainspec::{ChainSpec, EthereumHardforks};
 use reth_ethereum_forks::EthereumHardfork;
+use reth_revm::specification::hardfork::SpecId;
 
 /// Map the latest active hardfork at the given header to a revm
 /// [`SpecId`](revm_primitives::SpecId).
-pub fn revm_spec(chain_spec: &ChainSpec, header: &Header) -> revm_primitives::SpecId {
+pub fn revm_spec(chain_spec: &ChainSpec, header: &Header) -> SpecId {
     revm_spec_by_timestamp_and_block_number(chain_spec, header.timestamp, header.number)
 }
 
@@ -14,74 +15,74 @@ pub fn revm_spec_by_timestamp_and_block_number(
     chain_spec: &ChainSpec,
     timestamp: u64,
     block_number: u64,
-) -> revm_primitives::SpecId {
+) -> SpecId {
     if chain_spec
         .fork(EthereumHardfork::Osaka)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::OSAKA
+        SpecId::OSAKA
     } else if chain_spec
         .fork(EthereumHardfork::Prague)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::PRAGUE
+        SpecId::PRAGUE
     } else if chain_spec
         .fork(EthereumHardfork::Cancun)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::CANCUN
+        SpecId::CANCUN
     } else if chain_spec
         .fork(EthereumHardfork::Shanghai)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::SHANGHAI
+        SpecId::SHANGHAI
     } else if chain_spec.is_paris_active_at_block(block_number).is_some_and(|active| active) {
-        revm_primitives::MERGE
+        SpecId::MERGE
     } else if chain_spec
         .fork(EthereumHardfork::London)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::LONDON
+        SpecId::LONDON
     } else if chain_spec
         .fork(EthereumHardfork::Berlin)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::BERLIN
+        SpecId::BERLIN
     } else if chain_spec
         .fork(EthereumHardfork::Istanbul)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::ISTANBUL
+        SpecId::ISTANBUL
     } else if chain_spec
         .fork(EthereumHardfork::Petersburg)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::PETERSBURG
+        SpecId::PETERSBURG
     } else if chain_spec
         .fork(EthereumHardfork::Byzantium)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::BYZANTIUM
+        SpecId::BYZANTIUM
     } else if chain_spec
         .fork(EthereumHardfork::SpuriousDragon)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::SPURIOUS_DRAGON
+        SpecId::SPURIOUS_DRAGON
     } else if chain_spec
         .fork(EthereumHardfork::Tangerine)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::TANGERINE
+        SpecId::TANGERINE
     } else if chain_spec
         .fork(EthereumHardfork::Homestead)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::HOMESTEAD
+        SpecId::HOMESTEAD
     } else if chain_spec
         .fork(EthereumHardfork::Frontier)
         .active_at_timestamp_or_number(timestamp, block_number)
     {
-        revm_primitives::FRONTIER
+        SpecId::FRONTIER
     } else {
         panic!(
             "invalid hardfork chainspec: expected at least one hardfork, got {:?}",

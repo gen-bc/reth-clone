@@ -27,8 +27,11 @@ use reth_chainspec::ChainSpec;
 use reth_evm::{ConfigureEvm, ConfigureEvmEnv, EvmEnv, NextBlockEnvAttributes};
 use reth_primitives::TransactionSigned;
 use reth_primitives_traits::transaction::execute::FillTxEnv;
-use revm_primitives::{
-    AnalysisKind, BlobExcessGasAndPrice, BlockEnv, CfgEnv, CfgEnvWithHandlerCfg, SpecId, TxEnv,
+use reth_revm::{
+    context::{BlockEnv, CfgEnv, TxEnv},
+    context_interface::block::BlobExcessGasAndPrice,
+    specification::hardfork::SpecId,
+    Database,
 };
 
 mod config;
@@ -68,7 +71,7 @@ impl ConfigureEvmEnv for EthEvmConfig {
     type Transaction = TransactionSigned;
     type Error = Infallible;
     type TxEnv = TxEnv;
-    type Spec = revm_primitives::SpecId;
+    type Spec = SpecId;
 
     fn tx_env(&self, transaction: &TransactionSigned, sender: Address) -> Self::TxEnv {
         let mut tx_env = TxEnv::default();
@@ -81,23 +84,22 @@ impl ConfigureEvmEnv for EthEvmConfig {
 
         let mut cfg_env = CfgEnv::default();
         cfg_env.chain_id = self.chain_spec.chain().id();
-        cfg_env.perf_analyse_created_bytecodes = AnalysisKind::default();
 
         let block_env = BlockEnv {
-            number: U256::from(header.number()),
-            coinbase: header.beneficiary(),
-            timestamp: U256::from(header.timestamp()),
+            number: header.number(),
+            beneficiary: header.beneficiary(),
+            timestamp: header.timestamp(),
             difficulty: if spec >= SpecId::MERGE { U256::ZERO } else { header.difficulty() },
             prevrandao: if spec >= SpecId::MERGE { header.mix_hash() } else { None },
-            gas_limit: U256::from(header.gas_limit()),
-            basefee: U256::from(header.base_fee_per_gas().unwrap_or_default()),
+            gas_limit: header.gas_limit(),
+            basefee: header.base_fee_per_gas().unwrap_or_default(),
             // EIP-4844 excess blob gas of this block, introduced in Cancun
             blob_excess_gas_and_price: header.excess_blob_gas.map(|excess_blob_gas| {
                 BlobExcessGasAndPrice::new(excess_blob_gas, spec >= SpecId::PRAGUE)
             }),
         };
 
-        EvmEnv { cfg_env, spec, block_env }
+        EvmEnv { cfg_env, block_env }
     }
 
     fn next_evm_env(
@@ -105,15 +107,15 @@ impl ConfigureEvmEnv for EthEvmConfig {
         parent: &Self::Header,
         attributes: NextBlockEnvAttributes,
     ) -> Result<EvmEnv, Self::Error> {
-        // configure evm env based on parent block
-        let cfg = CfgEnv::default().with_chain_id(self.chain_spec.chain().id());
-
         // ensure we're not missing any timestamp based hardforks
         let spec_id = revm_spec_by_timestamp_and_block_number(
             &self.chain_spec,
             attributes.timestamp,
             parent.number() + 1,
         );
+
+        // configure evm env based on parent block
+        let cfg = CfgEnv::new().with_chain_id(self.chain_spec.chain().id()).with_spec(spec_id);
 
         let blob_params =
             if spec_id >= SpecId::PRAGUE { BlobParams::prague() } else { BlobParams::cancun() };
@@ -129,7 +131,7 @@ impl ConfigureEvmEnv for EthEvmConfig {
             self.chain_spec.base_fee_params_at_timestamp(attributes.timestamp),
         );
 
-        let mut gas_limit = U256::from(attributes.gas_limit);
+        let mut gas_limit = attributes.gas_limit;
 
         // If we are on the London fork boundary, we need to multiply the parent's gas limit by the
         // elasticity multiplier to get the new gas limit.
@@ -140,26 +142,26 @@ impl ConfigureEvmEnv for EthEvmConfig {
                 .elasticity_multiplier;
 
             // multiply the gas limit by the elasticity multiplier
-            gas_limit *= U256::from(elasticity_multiplier);
+            gas_limit *= elasticity_multiplier as u64;
 
             // set the base fee to the initial base fee from the EIP-1559 spec
             basefee = Some(INITIAL_BASE_FEE)
         }
 
         let block_env = BlockEnv {
-            number: U256::from(parent.number + 1),
-            coinbase: attributes.suggested_fee_recipient,
-            timestamp: U256::from(attributes.timestamp),
+            number: parent.number + 1,
+            beneficiary: attributes.suggested_fee_recipient,
+            timestamp: attributes.timestamp,
             difficulty: U256::ZERO,
             prevrandao: Some(attributes.prev_randao),
             gas_limit,
             // calculate basefee based on parent block's gas usage
-            basefee: basefee.map(U256::from).unwrap_or_default(),
+            basefee: basefee.unwrap_or_default(),
             // calculate excess gas based on parent block's blob gas usage
             blob_excess_gas_and_price,
         };
 
-        Ok((CfgEnvWithHandlerCfg::new_with_spec_id(cfg, spec_id), block_env).into())
+        Ok((cfg, block_env).into())
     }
 }
 

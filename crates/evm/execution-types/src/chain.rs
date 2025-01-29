@@ -12,7 +12,7 @@ use reth_primitives::{
 };
 use reth_primitives_traits::{Block, BlockBody, NodePrimitives, SignedTransaction};
 use reth_trie::updates::TrieUpdates;
-use revm::db::BundleState;
+use revm_database::BundleState;
 
 /// A chain of blocks and their final state.
 ///

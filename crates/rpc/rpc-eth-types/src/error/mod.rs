@@ -2,6 +2,9 @@
 
 pub mod api;
 pub use api::{AsEthApiError, FromEthApiError, FromEvmError, IntoEthApiError};
+use revm::context_interface::result::{
+    EVMError, ExecutionResult, HaltReason, InvalidHeader, InvalidTransaction, OutOfGasError,
+};
 
 use core::time::Duration;
 
@@ -18,9 +21,7 @@ use reth_transaction_pool::error::{
     Eip4844PoolTransactionError, Eip7702PoolTransactionError, InvalidPoolTransactionError,
     PoolError, PoolErrorKind, PoolTransactionError,
 };
-use revm::primitives::{EVMError, ExecutionResult, HaltReason, InvalidTransaction, OutOfGasError};
 use revm_inspectors::tracing::MuxError;
-use revm_primitives::InvalidHeader;
 use tracing::error;
 
 /// A trait to convert an error to an RPC error.
@@ -265,11 +266,11 @@ impl From<reth_errors::ProviderError> for EthApiError {
     }
 }
 
-impl<T> From<EVMError<T>> for EthApiError
+impl<T> From<EVMError<T, InvalidTransaction>> for EthApiError
 where
     T: Into<Self>,
 {
-    fn from(err: EVMError<T>) -> Self {
+    fn from(err: EVMError<T, InvalidTransaction>) -> Self {
         match err {
             EVMError::Transaction(invalid_tx) => match invalid_tx {
                 InvalidTransaction::NonceTooLow { tx, state } => {
@@ -470,7 +471,9 @@ impl RpcInvalidTransactionError {
     /// Converts the out of gas error
     pub const fn out_of_gas(reason: OutOfGasError, gas_limit: u64) -> Self {
         match reason {
-            OutOfGasError::Basic => Self::BasicOutOfGas(gas_limit),
+            OutOfGasError::Basic | OutOfGasError::ReentrancySentry => {
+                Self::BasicOutOfGas(gas_limit)
+            }
             OutOfGasError::Memory | OutOfGasError::MemoryLimit => Self::MemoryOutOfGas(gas_limit),
             OutOfGasError::Precompile => Self::PrecompileOutOfGas(gas_limit),
             OutOfGasError::InvalidOperand => Self::InvalidOperandOutOfGas(gas_limit),
@@ -495,9 +498,8 @@ impl From<RpcInvalidTransactionError> for jsonrpsee_types::error::ErrorObject<'s
     }
 }
 
-impl From<revm::primitives::InvalidTransaction> for RpcInvalidTransactionError {
-    fn from(err: revm::primitives::InvalidTransaction) -> Self {
-        use revm::primitives::InvalidTransaction;
+impl From<InvalidTransaction> for RpcInvalidTransactionError {
+    fn from(err: InvalidTransaction) -> Self {
         match err {
             InvalidTransaction::InvalidChainId => Self::InvalidChainId,
             InvalidTransaction::PriorityFeeGreaterThanMaxFee => Self::TipAboveFeeCap,
@@ -527,7 +529,7 @@ impl From<revm::primitives::InvalidTransaction> for RpcInvalidTransactionError {
             InvalidTransaction::BlobGasPriceGreaterThanMax => Self::BlobFeeCapTooLow,
             InvalidTransaction::EmptyBlobs => Self::BlobTransactionMissingBlobHashes,
             InvalidTransaction::BlobVersionNotSupported => Self::BlobHashVersionMismatch,
-            InvalidTransaction::TooManyBlobs { have } => Self::TooManyBlobs { have },
+            InvalidTransaction::TooManyBlobs { have, .. } => Self::TooManyBlobs { have },
             InvalidTransaction::BlobCreateTransaction => Self::BlobTransactionIsCreate,
             InvalidTransaction::EofCrateShouldHaveToAddress => Self::EofCrateShouldHaveToAddress,
             InvalidTransaction::AuthorizationListNotSupported => {

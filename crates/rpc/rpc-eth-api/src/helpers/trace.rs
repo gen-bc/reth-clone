@@ -7,19 +7,25 @@ use alloy_primitives::B256;
 use alloy_rpc_types_eth::{BlockId, TransactionInfo};
 use futures::Future;
 use reth_chainspec::ChainSpecProvider;
-use reth_errors::ProviderError;
-use reth_evm::{system_calls::SystemCaller, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv};
+use reth_evm::HaltReasonFor;
+use reth_evm::{
+    system_calls::SystemCaller, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv, InspectorFor,
+};
 use reth_primitives::RecoveredBlock;
+use reth_errors::ProviderError;
 use reth_primitives_traits::{BlockBody, SignedTransaction};
 use reth_provider::{BlockReader, ProviderBlock, ProviderHeader, ProviderTx};
-use reth_revm::database::StateProviderDatabase;
+use reth_revm::{database::StateProviderDatabase, db::CacheDB};
 use reth_rpc_eth_types::{
     cache::db::{StateCacheDb, StateCacheDbRefMutWrapper, StateProviderTraitObjWrapper},
     EthApiError,
 };
-use revm::{db::CacheDB, DatabaseCommit, GetInspector, Inspector};
+use revm::{
+    context_interface::result::{ExecutionResult, ResultAndState},
+    state::EvmState,
+    DatabaseCommit,
+};
 use revm_inspectors::tracing::{TracingInspector, TracingInspectorConfig};
-use revm_primitives::{EvmState, ExecutionResult, ResultAndState};
 use std::{fmt::Display, sync::Arc};
 
 /// Executes CPU heavy tasks.
@@ -44,14 +50,14 @@ pub trait Trace:
         inspector: I,
     ) -> Result<
         (
-            ResultAndState,
+            ResultAndState<HaltReasonFor<Self::Evm>>,
             (EvmEnv<<Self::Evm as ConfigureEvmEnv>::Spec>, <Self::Evm as ConfigureEvmEnv>::TxEnv),
         ),
         Self::Error,
     >
     where
         DB: Database<Error = ProviderError>,
-        I: GetInspector<DB>,
+        I: InspectorFor<DB, Self::Evm>,
     {
         let mut evm = self.evm_config().evm_with_env_and_inspector(db, evm_env.clone(), inspector);
         let res = evm.transact(tx_env.clone()).map_err(Self::Error::from_evm_err)?;
@@ -171,7 +177,8 @@ pub trait Trace:
             ) -> Result<R, Self::Error>
             + Send
             + 'static,
-        Insp: for<'a, 'b> Inspector<StateCacheDbRefMutWrapper<'a, 'b>> + Send + 'static,
+        Insp:
+            for<'a, 'b> InspectorFor<StateCacheDbRefMutWrapper<'a, 'b>, Self::Evm> + Send + 'static,
         R: Send + 'static,
     {
         async move {
@@ -277,7 +284,8 @@ pub trait Trace:
             + Send
             + 'static,
         Setup: FnMut() -> Insp + Send + 'static,
-        Insp: for<'a, 'b> Inspector<StateCacheDbRefMutWrapper<'a, 'b>> + Send + 'static,
+        Insp:
+            for<'a, 'b> InspectorFor<StateCacheDbRefMutWrapper<'a, 'b>, Self::Evm> + Send + 'static,
         R: Send + 'static,
     {
         async move {
@@ -304,8 +312,8 @@ pub trait Trace:
                 let state_at = block.parent_hash();
                 let block_hash = block.hash();
 
-                let block_number = evm_env.block_env.number.saturating_to::<u64>();
-                let base_fee = evm_env.block_env.basefee.saturating_to::<u128>();
+                let block_number = evm_env.block_env.number;
+                let base_fee = evm_env.block_env.basefee;
 
                 // now get the state
                 let state = this.state_at_block_id(state_at.into())?;
@@ -333,7 +341,7 @@ pub trait Trace:
                             index: Some(idx as u64),
                             block_hash: Some(block_hash),
                             block_number: Some(block_number),
-                            base_fee: Some(base_fee),
+                            base_fee: Some(base_fee as u128),
                         };
                         let tx_env = this.evm_config().tx_env(tx, *signer);
                         (tx_info, tx_env)
@@ -435,7 +443,8 @@ pub trait Trace:
             + Send
             + 'static,
         Setup: FnMut() -> Insp + Send + 'static,
-        Insp: for<'a, 'b> Inspector<StateCacheDbRefMutWrapper<'a, 'b>> + Send + 'static,
+        Insp:
+            for<'a, 'b> InspectorFor<StateCacheDbRefMutWrapper<'a, 'b>, Self::Evm> + Send + 'static,
         R: Send + 'static,
     {
         self.trace_block_until_with_inspector(block_id, block, None, insp_setup, f)
@@ -446,7 +455,7 @@ pub trait Trace:
     /// Note: This should only be called when tracing an entire block vs individual transactions.
     /// When tracing transaction on top of an already committed block state, those transitions are
     /// already applied.
-    fn apply_pre_execution_changes<DB: Send + Database<Error: Display> + DatabaseCommit>(
+    fn apply_pre_execution_changes<DB: Send + Database + DatabaseCommit>(
         &self,
         block: &RecoveredBlock<ProviderBlock<Self::Provider>>,
         db: &mut DB,

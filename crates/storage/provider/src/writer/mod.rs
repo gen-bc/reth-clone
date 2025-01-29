@@ -11,7 +11,7 @@ use reth_primitives::{NodePrimitives, StaticFileSegment};
 use reth_primitives_traits::SignedTransaction;
 use reth_storage_api::{DBProvider, StageCheckpointWriter, TransactionsProviderExt};
 use reth_storage_errors::writer::UnifiedStorageWriterError;
-use revm::db::OriginalValuesKnown;
+use revm_database::OriginalValuesKnown;
 use std::sync::Arc;
 use tracing::debug;
 

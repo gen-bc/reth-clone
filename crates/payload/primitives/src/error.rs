@@ -4,6 +4,7 @@ use alloc::boxed::Box;
 use alloy_primitives::B256;
 use alloy_rpc_types_engine::ForkchoiceUpdateError;
 use reth_errors::{ProviderError, RethError};
+use revm_context_interface::result::{EVMError, InvalidTransaction};
 use tokio::sync::oneshot;
 
 /// Possible error variants during payload building.

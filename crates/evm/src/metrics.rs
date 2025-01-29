@@ -8,7 +8,7 @@ use metrics::{Counter, Gauge, Histogram};
 use reth_execution_types::BlockExecutionOutput;
 use reth_metrics::Metrics;
 use reth_primitives::RecoveredBlock;
-use revm_primitives::EvmState;
+use revm::state::EvmState;
 use std::time::Instant;
 
 /// Wrapper struct that combines metrics and state hook
@@ -145,7 +145,7 @@ mod tests {
     use super::*;
     use alloy_eips::eip7685::Requests;
     use metrics_util::debugging::{DebugValue, DebuggingRecorder, Snapshotter};
-    use revm::db::BundleState;
+    use revm_database::BundleState;
     use revm_primitives::{
         Account, AccountInfo, AccountStatus, EvmState, EvmStorage, EvmStorageSlot, B256, U256,
     };

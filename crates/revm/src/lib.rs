@@ -20,6 +20,8 @@ pub mod cached;
 /// Contains glue code for integrating reth database into revm's [Database].
 pub mod database;
 
+pub use revm_database as db;
+
 /// Common test helpers
 #[cfg(any(test, feature = "test-utils"))]
 pub mod test_utils;

@@ -24,6 +24,7 @@ use reth_primitives::{
 use reth_primitives_traits::{block::Block as _, proofs, SignedTransaction};
 use reth_provider::{BlockReader, ExecutionOutcome, ProviderError, StateProviderFactory};
 use reth_revm::{
+    context_interface::result::EVMError,
     database::StateProviderDatabase,
     db::{states::bundle_state::BundleRetention, State},
     DatabaseCommit,
