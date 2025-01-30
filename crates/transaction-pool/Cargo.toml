@@ -89,7 +89,6 @@ serde = [
     "smallvec/serde",
     "reth-primitives-traits/serde",
     "revm-interpreter/serde",
-    "revm-primitives/serde",
 ]
 test-utils = [
     "rand",
@@ -114,7 +113,6 @@ arbitrary = [
     "reth-primitives-traits/arbitrary",
     "smallvec/arbitrary",
     "revm-interpreter/arbitrary",
-    "revm-primitives/arbitrary",
 ]
 
 [[bench]]

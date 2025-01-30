@@ -214,11 +214,10 @@ impl From<Account> for AccountInfo {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use alloy_primitives::{hex_literal::hex, B256, U256};
     use reth_codecs::Compact;
-    use revm_primitives::{JumpTable, LegacyAnalyzedBytecode};
-
-    use super::*;
+    use revm_bytecode::{JumpTable, LegacyAnalyzedBytecode};
 
     #[test]
     fn test_account() {

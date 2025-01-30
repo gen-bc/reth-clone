@@ -3,31 +3,30 @@
 
 use super::{LoadBlock, LoadPendingBlock, LoadState, LoadTransaction, SpawnBlocking, Trace};
 use crate::{
-    helpers::estimate::EstimateCall, FromEvmError, FullEthApiTypes, RpcBlock,
-    RpcNodeCore,
+    helpers::estimate::EstimateCall, FromEvmError, FullEthApiTypes, RpcBlock, RpcNodeCore,
 };
 use alloy_consensus::BlockHeader;
 use alloy_eips::{eip1559::calc_next_block_base_fee, eip2930::AccessListResult};
 use alloy_primitives::{Address, Bytes, B256, U256};
-use reth_evm::HaltReasonFor;
 use alloy_rpc_types_eth::{
     simulate::{SimBlock, SimulatePayload, SimulatedBlock},
     state::{EvmOverrides, StateOverride},
     transaction::TransactionRequest,
     BlockId, Bundle, EthCallResponse, StateContext, TransactionInfo,
 };
-use reth_errors::ProviderError;
 use futures::Future;
 use reth_chainspec::EthChainSpec;
-use reth_evm::{ConfigureEvm, ConfigureEvmEnv, Evm, EvmEnv, InspectorFor, TransactionEnv};
+use reth_errors::ProviderError;
+use reth_evm::{
+    ConfigureEvm, ConfigureEvmEnv, Evm, EvmEnv, HaltReasonFor, InspectorFor, TransactionEnv,
+};
 use reth_node_api::BlockBody;
 use reth_primitives_traits::SignedTransaction;
 use reth_provider::{BlockIdReader, ChainSpecProvider, ProviderHeader};
 use reth_revm::{database::StateProviderDatabase, db::CacheDB, DatabaseRef};
-use reth_rpc_eth_types::error::api::FromEvmHalt;
 use reth_rpc_eth_types::{
     cache::db::{StateCacheDbRefMutWrapper, StateProviderTraitObjWrapper},
-    error::ensure_success,
+    error::{api::FromEvmHalt, ensure_success},
     revm_utils::{apply_block_overrides, apply_state_overrides, caller_gas_allowance},
     simulate::{self, EthSimulateError},
     EthApiError, RevertError, RpcInvalidTransactionError, StateCacheDb,
@@ -647,7 +646,11 @@ pub trait Call:
     ) -> impl Future<Output = Result<Option<R>, Self::Error>> + Send
     where
         Self: LoadBlock + LoadTransaction,
-        F: FnOnce(TransactionInfo, ResultAndState<HaltReasonFor<Self::Evm>>, StateCacheDb<'_>) -> Result<R, Self::Error>
+        F: FnOnce(
+                TransactionInfo,
+                ResultAndState<HaltReasonFor<Self::Evm>>,
+                StateCacheDb<'_>,
+            ) -> Result<R, Self::Error>
             + Send
             + 'static,
         R: Send + 'static,

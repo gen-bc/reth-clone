@@ -929,9 +929,9 @@ mod tests {
     };
     use reth_testing_utils::generators::{self, Rng};
     use reth_trie::{test_utils::state_root, TrieInput};
-    use revm_primitives::{
-        Account as RevmAccount, AccountInfo, AccountStatus, Address, EvmState, EvmStorageSlot,
-        HashMap, B256, KECCAK_EMPTY, U256,
+    use revm_primitives::{Address, HashMap, B256, KECCAK_EMPTY, U256};
+    use revm_state::{
+        Account as RevmAccount, AccountInfo, AccountStatus, EvmState, EvmStorageSlot,
     };
     use std::sync::Arc;
 

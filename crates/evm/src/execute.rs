@@ -480,8 +480,12 @@ mod tests {
     use core::marker::PhantomData;
     use reth_chainspec::{ChainSpec, MAINNET};
     use reth_primitives::EthPrimitives;
-    use revm_database::{CacheDB, EmptyDBTyped};
-    use revm_primitives::{address, bytes, AccountInfo, KECCAK_EMPTY};
+    use revm::{
+        database_interface::EmptyDBTyped,
+        primitives::{address, bytes, KECCAK_EMPTY},
+        state::AccountInfo,
+    };
+    use revm_database::CacheDB;
     use std::sync::Arc;
 
     #[derive(Clone, Default)]

@@ -369,12 +369,8 @@ where
                                 let db = db.0;
 
                                 let tx_info = TransactionInfo {
-                                    block_number: Some(
-                                        evm_env.block_env.number.try_into().unwrap_or_default(),
-                                    ),
-                                    base_fee: Some(
-                                        evm_env.block_env.basefee.try_into().unwrap_or_default(),
-                                    ),
+                                    block_number: Some(evm_env.block_env.number),
+                                    base_fee: Some(evm_env.block_env.basefee as u128),
                                     hash: None,
                                     block_hash: None,
                                     index: None,
@@ -690,8 +686,8 @@ where
                 .map(|c| c.tx_index.map(|i| i as u64))
                 .unwrap_or_default(),
             block_hash: transaction_context.as_ref().map(|c| c.block_hash).unwrap_or_default(),
-            block_number: Some(evm_env.block_env.number.try_into().unwrap_or_default()),
-            base_fee: Some(evm_env.block_env.basefee.try_into().unwrap_or_default()),
+            block_number: Some(evm_env.block_env.number),
+            base_fee: Some(evm_env.block_env.basefee as u128),
         };
 
         if let Some(tracer) = tracer {

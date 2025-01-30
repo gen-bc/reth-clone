@@ -6,7 +6,7 @@ use alloy_primitives::B256;
 use core::fmt::Display;
 use reth_chainspec::EthereumHardforks;
 use reth_execution_errors::{BlockExecutionError, BlockValidationError};
-use revm::context_interface::result::{HaltReason, ResultAndState};
+use revm::context_interface::result::ResultAndState;
 
 /// Applies the pre-block call to the [EIP-4788] beacon block root contract, using the given block,
 /// chain spec, EVM.

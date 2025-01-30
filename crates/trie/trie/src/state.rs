@@ -337,10 +337,8 @@ mod tests {
     use super::*;
     use alloy_primitives::Bytes;
     use reth_trie_common::KeccakKeyHasher;
-    use revm::{
-        db::{states::StorageSlot, StorageWithOriginalValues},
-        primitives::{AccountInfo, Bytecode},
-    };
+    use revm_database::{states::StorageSlot, StorageWithOriginalValues};
+    use revm_state::{AccountInfo, Bytecode};
 
     #[test]
     fn hashed_state_wiped_extension() {
@@ -426,7 +424,7 @@ mod tests {
             balance: U256::from(123),
             nonce: 42,
             code_hash: B256::random(),
-            code: Some(Bytecode::LegacyRaw(Bytes::from(vec![1, 2]))),
+            code: Some(Bytecode::new_raw(Bytes::from(vec![1, 2]))),
         };
 
         let mut storage = StorageWithOriginalValues::default();

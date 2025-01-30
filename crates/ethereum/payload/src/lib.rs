@@ -47,10 +47,7 @@ use reth_transaction_pool::{
     BestTransactionsAttributes, PoolTransaction, TransactionPool, ValidPoolTransaction,
 };
 use revm::{
-    context_interface::{
-        result::{ ResultAndState},
-        Block as _,
-    },
+    context_interface::{result::ResultAndState, Block as _},
     DatabaseCommit,
 };
 use std::sync::Arc;

@@ -1,15 +1,12 @@
 //! [EIP-2935](https://eips.ethereum.org/EIPS/eip-2935) system call implementation.
 
-use core::fmt::Display;
-
+use crate::Evm;
 use alloc::string::ToString;
 use alloy_eips::eip2935::HISTORY_STORAGE_ADDRESS;
-use revm::context_interface::result::{HaltReason, ResultAndState};
-
-use crate::Evm;
 use alloy_primitives::B256;
 use reth_chainspec::EthereumHardforks;
 use reth_execution_errors::{BlockExecutionError, BlockValidationError};
+use revm::context_interface::result::ResultAndState;
 
 /// Applies the pre-block call to the [EIP-2935] blockhashes contract, using the given block,
 /// chain specification, and EVM.

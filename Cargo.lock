@@ -6588,6 +6588,7 @@ dependencies = [
  "reth-testing-utils",
  "reth-trie",
  "revm-database",
+ "revm-state",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -7262,6 +7263,7 @@ dependencies = [
  "reth-trie-parallel",
  "reth-trie-sparse",
  "revm-primitives",
+ "revm-state",
  "schnellru",
  "thiserror 2.0.11",
  "tokio",
@@ -7527,7 +7529,6 @@ dependencies = [
  "revm",
  "revm-database",
  "revm-inspector",
- "revm-primitives",
 ]
 
 [[package]]
@@ -7550,8 +7551,6 @@ dependencies = [
  "reth-primitives-traits",
  "reth-revm",
  "reth-testing-utils",
- "revm-database",
- "revm-primitives",
  "secp256k1",
  "serde_json",
 ]
@@ -7567,7 +7566,7 @@ dependencies = [
  "reth-consensus",
  "reth-prune-types",
  "reth-storage-errors",
- "revm-primitives",
+ "revm-database-interface",
  "thiserror 2.0.11",
 ]
 
@@ -8559,7 +8558,6 @@ dependencies = [
  "reth-chainspec",
  "reth-errors",
  "reth-primitives",
- "revm-context-interface",
  "serde",
  "thiserror 2.0.11",
  "tokio",
@@ -8689,8 +8687,9 @@ dependencies = [
  "reth-testing-utils",
  "reth-trie",
  "reth-trie-db",
- "revm",
  "revm-database",
+ "revm-database-interface",
+ "revm-state",
  "strum",
  "tempfile",
  "tokio",
@@ -8762,6 +8761,7 @@ dependencies = [
  "reth-trie",
  "revm",
  "revm-database",
+ "revm-inspector",
 ]
 
 [[package]]
@@ -9003,7 +9003,6 @@ dependencies = [
  "reth-transaction-pool",
  "reth-trie-common",
  "revm",
- "revm-inspector",
  "revm-inspectors",
  "revm-primitives",
  "tokio",
@@ -9369,7 +9368,6 @@ dependencies = [
  "reth-tasks",
  "reth-tracing",
  "revm-interpreter",
- "revm-primitives",
  "revm-specification",
  "rustc-hash 2.1.0",
  "schnellru",
@@ -9408,6 +9406,7 @@ dependencies = [
  "reth-trie-common",
  "reth-trie-sparse",
  "revm-database",
+ "revm-state",
  "serde_json",
  "tracing",
  "triehash",
@@ -9464,6 +9463,7 @@ dependencies = [
  "reth-trie",
  "reth-trie-common",
  "revm",
+ "revm-database",
  "serde",
  "serde_json",
  "similar-asserts",

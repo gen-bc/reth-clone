@@ -21,6 +21,7 @@ pub mod cached;
 pub mod database;
 
 pub use revm_database as db;
+pub use revm_inspector as inspector;
 
 /// Common test helpers
 #[cfg(any(test, feature = "test-utils"))]

@@ -20,17 +20,13 @@ extern crate alloc;
 use alloy_consensus::transaction::Recovered;
 use alloy_eips::eip2930::AccessList;
 pub use alloy_evm::evm::EvmFactory;
-use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_primitives::{Address, B256};
 use core::fmt::Debug;
 use reth_primitives_traits::{BlockHeader, SignedTransaction};
 use revm::{
-    context::TxEnv,
-    context_interface::result::{EVMError, InvalidTransaction},
-    interpreter::interpreter::EthInterpreter,
-    specification::hardfork::SpecId,
+    context::TxEnv, interpreter::interpreter::EthInterpreter, specification::hardfork::SpecId,
 };
 use revm_inspector::{inspectors::NoOpInspector, Inspector};
-use revm_primitives::TxKind;
 
 pub mod either;
 /// EVM environment configuration.
@@ -50,11 +46,11 @@ pub mod test_utils;
 
 pub use alloy_evm::{Database, Evm, EvmEnv, EvmError, InvalidTxError};
 
+/// Helper trait to bound [`revm_inspector::Inspector`] for a [`ConfigureEvm`].
 pub trait InspectorFor<DB: Database, Evm: ConfigureEvm>:
     Inspector<<Evm::EvmFactory as EvmFactory<EvmEnv<Evm::Spec>>>::Context<DB>, EthInterpreter>
 {
 }
-
 impl<T, DB, Evm> InspectorFor<DB, Evm> for T
 where
     DB: Database,

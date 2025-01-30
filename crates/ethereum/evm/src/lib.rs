@@ -177,15 +177,14 @@ mod tests {
     use super::*;
     use alloy_consensus::Header;
     use alloy_genesis::Genesis;
-    use alloy_primitives::U256;
     use reth_chainspec::{Chain, ChainSpec, MAINNET};
     use reth_evm::{execute::ProviderError, EvmEnv};
     use reth_revm::{
-        db::{CacheDB, EmptyDBTyped},
-        inspectors::NoOpInspector,
-        primitives::{BlockEnv, CfgEnv, SpecId},
+        context::{BlockEnv, CfgEnv},
+        database_interface::EmptyDBTyped,
+        db::CacheDB,
+        inspector::inspectors::NoOpInspector,
     };
-    use revm_primitives::HandlerCfg;
 
     #[test]
     fn test_fill_cfg_and_block_env() {
@@ -224,14 +223,8 @@ mod tests {
         let evm = evm_config.evm_with_env(db, evm_env.clone());
 
         // Check that the EVM environment
-        assert_eq!(evm.context.evm.env.block, evm_env.block_env);
-        assert_eq!(evm.context.evm.env.cfg, evm_env.cfg_env);
-
-        // Default spec ID
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.block, evm_env.block_env);
+        assert_eq!(evm.cfg, evm_env.cfg_env);
     }
 
     #[test]
@@ -249,13 +242,7 @@ mod tests {
         let evm = evm_config.evm_with_env(db, evm_env);
 
         // Check that the EVM environment is initialized with the custom environment
-        assert_eq!(evm.context.evm.inner.env.cfg, cfg);
-
-        // Default spec ID
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.cfg, cfg);
     }
 
     #[test]
@@ -266,25 +253,18 @@ mod tests {
         let db = CacheDB::<EmptyDBTyped<ProviderError>>::default();
 
         // Create customs block and tx env
-        let block = BlockEnv {
-            basefee: U256::from(1000),
-            gas_limit: U256::from(10_000_000),
-            number: U256::from(42),
-            ..Default::default()
-        };
+        let block =
+            BlockEnv { basefee: 1000, gas_limit: 10_000_000, number: 42, ..Default::default() };
 
         let evm_env = EvmEnv { block_env: block, ..Default::default() };
 
         let evm = evm_config.evm_with_env(db, evm_env.clone());
 
         // Verify that the block and transaction environments are set correctly
-        assert_eq!(evm.context.evm.env.block, evm_env.block_env);
+        assert_eq!(evm.block, evm_env.block_env);
 
         // Default spec ID
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.cfg.spec, SpecId::LATEST);
     }
 
     #[test]
@@ -294,18 +274,15 @@ mod tests {
 
         let db = CacheDB::<EmptyDBTyped<ProviderError>>::default();
 
-        let evm_env = EvmEnv { spec: SpecId::CONSTANTINOPLE, ..Default::default() };
+        let evm_env = EvmEnv {
+            cfg_env: CfgEnv::new().with_spec(SpecId::CONSTANTINOPLE),
+            ..Default::default()
+        };
 
         let evm = evm_config.evm_with_env(db, evm_env);
 
         // Check that the spec ID is setup properly
-        assert_eq!(evm.handler.spec_id(), SpecId::PETERSBURG);
-
-        // No Optimism
-        assert_eq!(
-            evm.handler.cfg,
-            HandlerCfg { spec_id: SpecId::PETERSBURG, ..Default::default() }
-        );
+        assert_eq!(evm.cfg.spec, SpecId::CONSTANTINOPLE);
     }
 
     #[test]
@@ -316,16 +293,11 @@ mod tests {
 
         let evm_env = EvmEnv::default();
 
-        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector);
+        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector {});
 
         // Check that the EVM environment is set to default values
-        assert_eq!(evm.context.evm.env.block, evm_env.block_env);
-        assert_eq!(evm.context.evm.env.cfg, evm_env.cfg_env);
-        assert_eq!(evm.context.external, NoOpInspector);
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.block, evm_env.block_env);
+        assert_eq!(evm.cfg, evm_env.cfg_env);
     }
 
     #[test]
@@ -336,18 +308,13 @@ mod tests {
 
         let cfg_env = CfgEnv::default().with_chain_id(111);
         let block = BlockEnv::default();
-        let evm_env =
-            EvmEnv { cfg_env: cfg_env.clone(), block_env: block, spec: Default::default() };
+        let evm_env = EvmEnv { cfg_env: cfg_env.clone(), block_env: block };
 
-        let evm = evm_config.evm_with_env_and_inspector(db, evm_env, NoOpInspector);
+        let evm = evm_config.evm_with_env_and_inspector(db, evm_env, NoOpInspector {});
 
         // Check that the EVM environment is set with custom configuration
-        assert_eq!(evm.context.evm.env.cfg, cfg_env);
-        assert_eq!(evm.context.external, NoOpInspector);
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.cfg, cfg_env);
+        assert_eq!(evm.cfg.spec, SpecId::LATEST);
     }
 
     #[test]
@@ -357,23 +324,15 @@ mod tests {
         let db = CacheDB::<EmptyDBTyped<ProviderError>>::default();
 
         // Create custom block and tx environment
-        let block = BlockEnv {
-            basefee: U256::from(1000),
-            gas_limit: U256::from(10_000_000),
-            number: U256::from(42),
-            ..Default::default()
-        };
+        let block =
+            BlockEnv { basefee: 1000, gas_limit: 10_000_000, number: 42, ..Default::default() };
         let evm_env = EvmEnv { block_env: block, ..Default::default() };
 
-        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector);
+        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector {});
 
         // Verify that the block and transaction environments are set correctly
-        assert_eq!(evm.context.evm.env.block, evm_env.block_env);
-        assert_eq!(evm.context.external, NoOpInspector);
-        assert_eq!(evm.handler.spec_id(), SpecId::LATEST);
-
-        // No Optimism
-        assert_eq!(evm.handler.cfg, HandlerCfg { spec_id: SpecId::LATEST, ..Default::default() });
+        assert_eq!(evm.block, evm_env.block_env);
+        assert_eq!(evm.cfg.spec, SpecId::LATEST);
     }
 
     #[test]
@@ -382,21 +341,17 @@ mod tests {
         let evm_config = EthEvmConfig::new(MAINNET.clone());
         let db = CacheDB::<EmptyDBTyped<ProviderError>>::default();
 
-        let evm_env = EvmEnv { spec: SpecId::CONSTANTINOPLE, ..Default::default() };
+        let evm_env = EvmEnv {
+            cfg_env: CfgEnv::new().with_spec(SpecId::CONSTANTINOPLE),
+            ..Default::default()
+        };
 
-        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector);
+        let evm = evm_config.evm_with_env_and_inspector(db, evm_env.clone(), NoOpInspector {});
 
         // Check that the spec ID is set properly
-        assert_eq!(evm.handler.spec_id(), SpecId::PETERSBURG);
-        assert_eq!(evm.context.evm.env.block, evm_env.block_env);
-        assert_eq!(evm.context.evm.env.cfg, evm_env.cfg_env);
-        assert_eq!(evm.context.evm.env.tx, Default::default());
-        assert_eq!(evm.context.external, NoOpInspector);
-
-        // No Optimism
-        assert_eq!(
-            evm.handler.cfg,
-            HandlerCfg { spec_id: SpecId::PETERSBURG, ..Default::default() }
-        );
+        assert_eq!(evm.cfg.spec, SpecId::PETERSBURG);
+        assert_eq!(evm.block, evm_env.block_env);
+        assert_eq!(evm.cfg, evm_env.cfg_env);
+        assert_eq!(evm.tx, Default::default());
     }
 }

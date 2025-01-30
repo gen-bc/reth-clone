@@ -5,8 +5,6 @@ use crate::{
     system_calls::OnStateHook,
     Database,
 };
-use alloy_primitives::BlockNumber;
-use reth_storage_errors::provider::ProviderError;
 
 // re-export Either
 pub use futures_util::future::Either;

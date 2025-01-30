@@ -11,10 +11,10 @@ use alloy_rpc_types_eth::BlockNumberOrTag;
 use futures::Future;
 use reth_chainspec::{EthChainSpec, EthereumHardforks};
 use reth_errors::RethError;
-use reth_evm::HaltReasonFor;
 use reth_evm::{
     state_change::post_block_withdrawals_balance_increments, system_calls::SystemCaller,
-    ConfigureEvm, ConfigureEvmEnv, Evm, EvmEnv, EvmError, InvalidTxError, NextBlockEnvAttributes,
+    ConfigureEvm, ConfigureEvmEnv, Evm, EvmEnv, EvmError, HaltReasonFor, InvalidTxError,
+    NextBlockEnvAttributes,
 };
 use reth_primitives::{InvalidTransactionError, RecoveredBlock};
 use reth_primitives_traits::Receipt;
@@ -392,7 +392,7 @@ pub trait LoadPendingBlock:
         // executes the withdrawals and commits them to the Database and BundleState.
         let balance_increments = post_block_withdrawals_balance_increments(
             chain_spec.as_ref(),
-            evm_env.block_env.timestamp.try_into().unwrap_or(u64::MAX),
+            evm_env.block_env.timestamp,
             &[],
         );
 

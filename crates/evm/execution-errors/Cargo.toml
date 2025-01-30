@@ -19,8 +19,9 @@ reth-prune-types.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 alloy-eips.workspace = true
-revm-primitives.workspace = true
 nybbles.workspace = true
+
+revm-database-interface.workspace = true
 
 thiserror.workspace = true
 

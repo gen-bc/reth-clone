@@ -10,16 +10,13 @@ use reth_errors::ProviderError;
 use reth_evm::{ConfigureEvmEnv, Database, EvmEnv, TransactionEnv};
 use reth_provider::StateProvider;
 use reth_revm::{database::StateProviderDatabase, db::CacheDB};
-use reth_rpc_eth_types::error::api::FromEvmHalt;
 use reth_rpc_eth_types::{
+    error::api::FromEvmHalt,
     revm_utils::{apply_state_overrides, caller_gas_allowance},
     EthApiError, RevertError, RpcInvalidTransactionError,
 };
 use reth_rpc_server_types::constants::gas_oracle::{CALL_STIPEND_GAS, ESTIMATE_GAS_ERROR_RATIO};
-use revm::context_interface::{
-    result::{ExecutionResult},
-    Transaction,
-};
+use revm::context_interface::{result::ExecutionResult, Transaction};
 use revm_primitives::TxKind;
 use tracing::trace;
 
@@ -116,9 +113,6 @@ pub trait EstimateCall: Call {
             highest_gas_limit = highest_gas_limit
                 .min(caller_gas_allowance(&mut db, &tx_env).map_err(Self::Error::from_eth_err)?);
         }
-
-        // We can now normalize the highest gas limit to a u64
-        let mut highest_gas_limit = highest_gas_limit;
 
         // If the provided gas limit is less than computed cap, use that
         tx_env.set_gas_limit(tx_env.gas_limit().min(highest_gas_limit));

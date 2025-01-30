@@ -86,14 +86,14 @@ where
                 block_env.blob_gasprice().map(U256::from),
             )?;
 
-        let gas_limit = gas.unwrap_or_else(|| {
+        let gas_limit = gas.unwrap_or(
             // Use maximum allowed gas limit. The reason for this
             // is that both Erigon and Geth use pre-configured gas cap even if
             // it's possible to derive the gas limit from the block:
             // <https://github.com/ledgerwatch/erigon/blob/eae2d9a79cb70dbe30b3a6b79c436872e4605458/cmd/rpcdaemon/commands/trace_adhoc.go#L956
             // https://github.com/ledgerwatch/erigon/blob/eae2d9a79cb70dbe30b3a6b79c436872e4605458/eth/ethconfig/config.go#L94>
-            block_env.gas_limit
-        });
+            block_env.gas_limit,
+        );
 
         let caller = from.unwrap_or_default();
 

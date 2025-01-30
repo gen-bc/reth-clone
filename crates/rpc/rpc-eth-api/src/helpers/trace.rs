@@ -7,12 +7,12 @@ use alloy_primitives::B256;
 use alloy_rpc_types_eth::{BlockId, TransactionInfo};
 use futures::Future;
 use reth_chainspec::ChainSpecProvider;
-use reth_evm::HaltReasonFor;
+use reth_errors::ProviderError;
 use reth_evm::{
-    system_calls::SystemCaller, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv, InspectorFor,
+    system_calls::SystemCaller, ConfigureEvm, ConfigureEvmEnv, Database, Evm, EvmEnv,
+    HaltReasonFor, InspectorFor,
 };
 use reth_primitives::RecoveredBlock;
-use reth_errors::ProviderError;
 use reth_primitives_traits::{BlockBody, SignedTransaction};
 use reth_provider::{BlockReader, ProviderBlock, ProviderHeader, ProviderTx};
 use reth_revm::{database::StateProviderDatabase, db::CacheDB};
@@ -26,7 +26,7 @@ use revm::{
     DatabaseCommit,
 };
 use revm_inspectors::tracing::{TracingInspector, TracingInspectorConfig};
-use std::{sync::Arc};
+use std::sync::Arc;
 
 /// Executes CPU heavy tasks.
 pub trait Trace:
@@ -81,7 +81,10 @@ pub trait Trace:
     ) -> Result<R, Self::Error>
     where
         Self: Call,
-        F: FnOnce(TracingInspector, ResultAndState<HaltReasonFor<Self::Evm>>) -> Result<R, Self::Error>,
+        F: FnOnce(
+            TracingInspector,
+            ResultAndState<HaltReasonFor<Self::Evm>>,
+        ) -> Result<R, Self::Error>,
     {
         self.with_state_at_block(at, |state| {
             let mut db = CacheDB::new(StateProviderDatabase::new(state));
@@ -108,7 +111,11 @@ pub trait Trace:
     ) -> impl Future<Output = Result<R, Self::Error>> + Send
     where
         Self: LoadPendingBlock + Call,
-        F: FnOnce(TracingInspector, ResultAndState<HaltReasonFor<Self::Evm>>, StateCacheDb<'_>) -> Result<R, Self::Error>
+        F: FnOnce(
+                TracingInspector,
+                ResultAndState<HaltReasonFor<Self::Evm>>,
+                StateCacheDb<'_>,
+            ) -> Result<R, Self::Error>
             + Send
             + 'static,
         R: Send + 'static,

@@ -6,11 +6,7 @@ use alloy_rpc_types_eth::{
     BlockOverrides,
 };
 use reth_evm::TransactionEnv;
-use revm::{
-    context::BlockEnv,
-    state::Bytecode,
-    Database, DatabaseRef,
-};
+use revm::{context::BlockEnv, state::Bytecode, Database, DatabaseRef};
 use revm_database::CacheDB;
 use std::cmp::min;
 

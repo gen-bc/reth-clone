@@ -8,7 +8,6 @@ use crate::{
 use reth_execution_errors::BlockExecutionError;
 use reth_execution_types::{BlockExecutionOutput, ExecutionOutcome};
 use reth_primitives::{NodePrimitives, RecoveredBlock};
-use reth_storage_errors::provider::ProviderError;
 use revm_database::State;
 
 const UNAVAILABLE_FOR_NOOP: &str = "execution unavailable for noop";

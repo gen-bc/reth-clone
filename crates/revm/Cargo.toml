@@ -25,6 +25,7 @@ alloy-primitives.workspace = true
 # revm
 revm.workspace = true
 revm-database.workspace = true
+revm-inspector.workspace = true
 
 [dev-dependencies]
 reth-trie.workspace = true

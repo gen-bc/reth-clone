@@ -27,6 +27,7 @@ alloy-eips.workspace = true
 alloy-primitives.workspace = true
 alloy-consensus.workspace = true
 revm-database.workspace = true
+revm-state = { workspace = true, optional = true }
 
 # async
 tokio = { workspace = true, default-features = false, features = ["sync", "macros"] }
@@ -59,6 +60,7 @@ test-utils = [
     "alloy-signer",
     "alloy-signer-local",
     "rand",
+    "revm-state",
     "reth-chainspec/test-utils",
     "reth-primitives/test-utils",
     "reth-primitives-traits/test-utils",

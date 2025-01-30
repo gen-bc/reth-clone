@@ -5,7 +5,6 @@ use alloc::vec::Vec;
 use alloy_eips::eip7685::Requests;
 use alloy_primitives::BlockNumber;
 use reth_primitives::Receipts;
-use revm_database::states::bundle_state::BundleRetention;
 
 /// Takes care of:
 ///  - recording receipts during execution of multiple blocks.

@@ -50,6 +50,9 @@ reth-primitives-traits = { workspace = true, features = ["test-utils"] }
 reth-ethereum-primitives = { workspace = true, features = ["arbitrary", "std"] }
 reth-trie-common = { workspace = true, features = ["test-utils", "arbitrary"] }
 
+# revm
+revm-state.workspace = true
+
 # trie
 triehash = "0.8"
 
