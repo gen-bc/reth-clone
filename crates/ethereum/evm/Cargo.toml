@@ -21,7 +21,6 @@ reth-ethereum-consensus.workspace = true
 reth-consensus.workspace = true
 
 # Ethereum
-revm-primitives.workspace = true
 revm-database.workspace = true
 reth-primitives-traits.workspace = true
 

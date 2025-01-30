@@ -20,7 +20,6 @@ use alloy_primitives::B256;
 use reth_consensus::ConsensusError;
 use reth_prune_types::PruneSegmentError;
 use reth_storage_errors::provider::ProviderError;
-use revm_context_interface::result::EVMError;
 use thiserror::Error;
 
 pub mod trie;

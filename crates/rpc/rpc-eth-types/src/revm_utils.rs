@@ -8,8 +8,6 @@ use alloy_rpc_types_eth::{
 use reth_evm::TransactionEnv;
 use revm::{
     context::BlockEnv,
-    precompile::{PrecompileSpecId, Precompiles},
-    specification::hardfork::SpecId,
     state::Bytecode,
     Database, DatabaseRef,
 };

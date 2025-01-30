@@ -11,7 +11,7 @@ use itertools::Itertools;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use reth_primitives_traits::Account;
 use reth_trie_common::KeyHasher;
-use revm_database::{states::CacheAccount, AccountStatus, BundleAccount};
+use revm_database::{AccountStatus, BundleAccount};
 use std::borrow::Cow;
 
 /// Representation of in-memory hashed state.

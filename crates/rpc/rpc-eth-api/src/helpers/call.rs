@@ -3,7 +3,7 @@
 
 use super::{LoadBlock, LoadPendingBlock, LoadState, LoadTransaction, SpawnBlocking, Trace};
 use crate::{
-    helpers::estimate::EstimateCall, FromEthApiError, FromEvmError, FullEthApiTypes, RpcBlock,
+    helpers::estimate::EstimateCall, FromEvmError, FullEthApiTypes, RpcBlock,
     RpcNodeCore,
 };
 use alloy_consensus::BlockHeader;
