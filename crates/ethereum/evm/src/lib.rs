@@ -31,7 +31,6 @@ use reth_revm::{
     context::{BlockEnv, CfgEnv, TxEnv},
     context_interface::block::BlobExcessGasAndPrice,
     specification::hardfork::SpecId,
-    Database,
 };
 
 mod config;

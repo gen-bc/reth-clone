@@ -5,9 +5,8 @@ pub use api::{AsEthApiError, FromEthApiError, FromEvmError, IntoEthApiError};
 use revm::context_interface::result::{
     EVMError, ExecutionResult, HaltReason, InvalidHeader, InvalidTransaction, OutOfGasError,
 };
-
+use crate::error::api::FromEvmHalt;
 use core::time::Duration;
-
 use alloy_eips::BlockId;
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_rpc_types_eth::{error::EthRpcErrorCode, request::TransactionInputError, BlockError};
@@ -756,14 +755,14 @@ pub enum SignError {
 
 /// Converts the evm [`ExecutionResult`] into a result where `Ok` variant is the output bytes if it
 /// is [`ExecutionResult::Success`].
-pub fn ensure_success(result: ExecutionResult) -> EthResult<Bytes> {
+pub fn ensure_success<Halt, Error: FromEvmHalt<Halt> + FromEthApiError>(result: ExecutionResult<Halt>) -> Result<Bytes, Error> {
     match result {
         ExecutionResult::Success { output, .. } => Ok(output.into_data()),
         ExecutionResult::Revert { output, .. } => {
-            Err(RpcInvalidTransactionError::Revert(RevertError::new(output)).into())
+            Err(Error::from_eth_err(RpcInvalidTransactionError::Revert(RevertError::new(output))))
         }
         ExecutionResult::Halt { reason, gas_used } => {
-            Err(RpcInvalidTransactionError::halt(reason, gas_used).into())
+            Err(Error::from_evm_halt(reason, gas_used))
         }
     }
 }

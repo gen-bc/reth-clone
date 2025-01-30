@@ -113,7 +113,7 @@ where
 
 /// Handles outputs of the calls execution and builds a [`SimulatedBlock`].
 #[expect(clippy::type_complexity)]
-pub fn build_simulated_block<T, B, Halt: Copy>(
+pub fn build_simulated_block<T, B, Halt: Clone>(
     senders: Vec<Address>,
     results: Vec<ExecutionResult<Halt>>,
     full_transactions: bool,
@@ -130,7 +130,7 @@ where
     for (index, (result, tx)) in results.iter().zip(block.body().transactions()).enumerate() {
         let call = match result {
             ExecutionResult::Halt { reason, gas_used } => {
-                let error = T::Error::from_evm_halt(*reason, tx.gas_limit());
+                let error = T::Error::from_evm_halt(reason.clone(), tx.gas_limit());
                 SimCallResult {
                     return_data: Bytes::new(),
                     error: Some(SimulateError {

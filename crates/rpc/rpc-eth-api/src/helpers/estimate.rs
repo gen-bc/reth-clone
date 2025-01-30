@@ -17,7 +17,7 @@ use reth_rpc_eth_types::{
 };
 use reth_rpc_server_types::constants::gas_oracle::{CALL_STIPEND_GAS, ESTIMATE_GAS_ERROR_RATIO};
 use revm::context_interface::{
-    result::{ExecutionResult, HaltReason},
+    result::{ExecutionResult},
     Transaction,
 };
 use revm_primitives::TxKind;
@@ -308,7 +308,7 @@ pub trait EstimateCall: Call {
                 RpcInvalidTransactionError::Revert(RevertError::new(output)).into_eth_err()
             }
             ExecutionResult::Halt { reason, .. } => {
-                RpcInvalidTransactionError::EvmHalt(reason).into_eth_err()
+                Self::Error::from_evm_halt(reason, req_gas_limit)
             }
         }
     }
@@ -320,8 +320,8 @@ pub trait EstimateCall: Call {
 /// gas limit for a transaction. It adjusts the highest or lowest gas limits depending on
 /// whether the execution succeeded, reverted, or halted due to specific reasons.
 #[inline]
-pub fn update_estimated_gas_range(
-    result: ExecutionResult,
+pub fn update_estimated_gas_range<Halt>(
+    result: ExecutionResult<Halt>,
     tx_gas_limit: u64,
     highest_gas_limit: &mut u64,
     lowest_gas_limit: &mut u64,

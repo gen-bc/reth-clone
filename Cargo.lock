@@ -263,6 +263,7 @@ dependencies = [
  "alloy-primitives",
  "revm",
  "revm-inspector",
+ "revm-optimism",
 ]
 
 [[package]]

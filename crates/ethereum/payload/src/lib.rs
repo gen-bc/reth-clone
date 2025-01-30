@@ -48,7 +48,7 @@ use reth_transaction_pool::{
 };
 use revm::{
     context_interface::{
-        result::{EVMError, InvalidTransaction, ResultAndState},
+        result::{ ResultAndState},
         Block as _,
     },
     DatabaseCommit,

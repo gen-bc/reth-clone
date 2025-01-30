@@ -26,7 +26,7 @@ use revm::{
     DatabaseCommit,
 };
 use revm_inspectors::tracing::{TracingInspector, TracingInspectorConfig};
-use std::{fmt::Display, sync::Arc};
+use std::{sync::Arc};
 
 /// Executes CPU heavy tasks.
 pub trait Trace:
@@ -81,7 +81,7 @@ pub trait Trace:
     ) -> Result<R, Self::Error>
     where
         Self: Call,
-        F: FnOnce(TracingInspector, ResultAndState) -> Result<R, Self::Error>,
+        F: FnOnce(TracingInspector, ResultAndState<HaltReasonFor<Self::Evm>>) -> Result<R, Self::Error>,
     {
         self.with_state_at_block(at, |state| {
             let mut db = CacheDB::new(StateProviderDatabase::new(state));
@@ -108,7 +108,7 @@ pub trait Trace:
     ) -> impl Future<Output = Result<R, Self::Error>> + Send
     where
         Self: LoadPendingBlock + Call,
-        F: FnOnce(TracingInspector, ResultAndState, StateCacheDb<'_>) -> Result<R, Self::Error>
+        F: FnOnce(TracingInspector, ResultAndState<HaltReasonFor<Self::Evm>>, StateCacheDb<'_>) -> Result<R, Self::Error>
             + Send
             + 'static,
         R: Send + 'static,
@@ -142,7 +142,7 @@ pub trait Trace:
         F: FnOnce(
                 TransactionInfo,
                 TracingInspector,
-                ResultAndState,
+                ResultAndState<HaltReasonFor<Self::Evm>>,
                 StateCacheDb<'_>,
             ) -> Result<R, Self::Error>
             + Send
@@ -172,7 +172,7 @@ pub trait Trace:
         F: FnOnce(
                 TransactionInfo,
                 Insp,
-                ResultAndState,
+                ResultAndState<HaltReasonFor<Self::Evm>>,
                 StateCacheDb<'_>,
             ) -> Result<R, Self::Error>
             + Send
@@ -237,7 +237,7 @@ pub trait Trace:
         F: Fn(
                 TransactionInfo,
                 TracingInspector,
-                ExecutionResult,
+                ExecutionResult<HaltReasonFor<Self::Evm>>,
                 &EvmState,
                 &StateCacheDb<'_>,
             ) -> Result<R, Self::Error>
@@ -277,7 +277,7 @@ pub trait Trace:
         F: Fn(
                 TransactionInfo,
                 Insp,
-                ExecutionResult,
+                ExecutionResult<HaltReasonFor<Self::Evm>>,
                 &EvmState,
                 &StateCacheDb<'_>,
             ) -> Result<R, Self::Error>
@@ -397,7 +397,7 @@ pub trait Trace:
         F: Fn(
                 TransactionInfo,
                 TracingInspector,
-                ExecutionResult,
+                ExecutionResult<HaltReasonFor<Self::Evm>>,
                 &EvmState,
                 &StateCacheDb<'_>,
             ) -> Result<R, Self::Error>
@@ -436,7 +436,7 @@ pub trait Trace:
         F: Fn(
                 TransactionInfo,
                 Insp,
-                ExecutionResult,
+                ExecutionResult<HaltReasonFor<Self::Evm>>,
                 &EvmState,
                 &StateCacheDb<'_>,
             ) -> Result<R, Self::Error>

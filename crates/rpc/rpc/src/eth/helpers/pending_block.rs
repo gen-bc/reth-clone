@@ -7,6 +7,7 @@ use reth_chainspec::{EthChainSpec, EthereumHardforks};
 use reth_evm::ConfigureEvm;
 use reth_primitives::{logs_bloom, BlockBody, Receipt};
 use reth_primitives_traits::proofs::calculate_transaction_root;
+use reth_evm::HaltReasonFor;
 use reth_provider::{
     BlockReader, BlockReaderIdExt, ChainSpecProvider, ProviderBlock, ProviderReceipt, ProviderTx,
     StateProviderFactory,
@@ -112,7 +113,7 @@ where
     fn assemble_receipt(
         &self,
         tx: &ProviderTx<Self::Provider>,
-        result: ExecutionResult,
+        result: ExecutionResult<HaltReasonFor<Self::Evm>>,
         cumulative_gas_used: u64,
     ) -> reth_provider::ProviderReceipt<Self::Provider> {
         #[allow(clippy::needless_update)]

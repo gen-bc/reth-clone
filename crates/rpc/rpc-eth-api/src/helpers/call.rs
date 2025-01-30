@@ -8,7 +8,7 @@ use crate::{
 };
 use alloy_consensus::BlockHeader;
 use alloy_eips::{eip1559::calc_next_block_base_fee, eip2930::AccessListResult};
-use alloy_primitives::{Address, Bytes, TxKind, B256, U256};
+use alloy_primitives::{Address, Bytes, B256, U256};
 use reth_evm::HaltReasonFor;
 use alloy_rpc_types_eth::{
     simulate::{SimBlock, SimulatePayload, SimulatedBlock},
@@ -256,7 +256,7 @@ pub trait EthCall: EstimateCall + Call + LoadPendingBlock + LoadBlock + FullEthA
             let (res, _env) =
                 self.transact_call_at(request, block_number.unwrap_or_default(), overrides).await?;
 
-            ensure_success(res.result).map_err(Self::Error::from_eth_err)
+            ensure_success(res.result)
         }
     }
 
@@ -345,7 +345,7 @@ pub trait EthCall: EstimateCall + Call + LoadPendingBlock + LoadBlock + FullEthA
                         this.prepare_call_env(evm_env.clone(), tx, &mut db, overrides)?;
                     let (res, _) = this.transact(&mut db, evm_env, tx)?;
 
-                    match ensure_success(res.result) {
+                    match ensure_success::<_, Self::Error>(res.result) {
                         Ok(output) => {
                             results.push(EthCallResponse { value: Some(output), error: None });
                         }
@@ -547,7 +547,7 @@ pub trait Call:
     ) -> impl Future<
         Output = Result<
             (
-                ResultAndState,
+                ResultAndState<HaltReasonFor<Self::Evm>>,
                 (
                     EvmEnv<<Self::Evm as ConfigureEvmEnv>::Spec>,
                     <Self::Evm as ConfigureEvmEnv>::TxEnv,
@@ -647,7 +647,7 @@ pub trait Call:
     ) -> impl Future<Output = Result<Option<R>, Self::Error>> + Send
     where
         Self: LoadBlock + LoadTransaction,
-        F: FnOnce(TransactionInfo, ResultAndState, StateCacheDb<'_>) -> Result<R, Self::Error>
+        F: FnOnce(TransactionInfo, ResultAndState<HaltReasonFor<Self::Evm>>, StateCacheDb<'_>) -> Result<R, Self::Error>
             + Send
             + 'static,
         R: Send + 'static,
