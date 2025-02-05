@@ -18,7 +18,7 @@ use clap::Parser;
 use csv::Writer;
 use reth_cli_runner::CliContext;
 use reth_node_core::args::BenchmarkArgs;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tracing::{debug, info};
 
 /// `reth benchmark new-payload-only` command
@@ -41,6 +41,8 @@ impl Command {
             BenchContext::new(&self.benchmark, self.rpc_url).await?;
 
         let (sender, mut receiver) = tokio::sync::mpsc::channel(1000);
+        // time to wait before requesting a new block to prevent being throttled on RPC endpoints.
+        let cool_off = Duration::from_millis(10);
         tokio::task::spawn(async move {
             while benchmark_mode.contains(next_block) {
                 let block_res =
@@ -50,6 +52,7 @@ impl Command {
 
                 next_block += 1;
                 sender.send(block).await.unwrap();
+                tokio::time::sleep(cool_off).await;
             }
         });
 
@@ -82,8 +85,8 @@ impl Command {
             let new_payload_result = NewPayloadResult { gas_used, latency: start.elapsed() };
             info!(%new_payload_result);
 
-            // current duration since the start of the benchmark
-            let current_duration = total_benchmark_duration.elapsed();
+            // current duration since the start of the benchmark minus the per block cool off time
+            let current_duration = total_benchmark_duration.elapsed().saturating_sub(cool_off);
 
             // record the current result
             let row = TotalGasRow { block_number, gas_used, time: current_duration };

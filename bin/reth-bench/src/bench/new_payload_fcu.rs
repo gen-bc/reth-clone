@@ -20,7 +20,7 @@ use reth_cli_runner::CliContext;
 use reth_node_core::args::BenchmarkArgs;
 use reth_primitives::SealedBlock;
 use reth_primitives_traits::SealedHeader;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tracing::{debug, info};
 
 /// `reth benchmark new-payload-fcu` command
@@ -41,6 +41,8 @@ impl Command {
             BenchContext::new(&self.benchmark, self.rpc_url).await?;
 
         let (sender, mut receiver) = tokio::sync::mpsc::channel(1000);
+        // time to wait before requesting a new block to prevent being throttled on RPC endpoints.
+        let cool_off = Duration::from_millis(10);
         tokio::task::spawn(async move {
             while benchmark_mode.contains(next_block) {
                 let block_res =
@@ -65,6 +67,7 @@ impl Command {
                     .send((block, head_block_hash, safe_block_hash, finalized_block_hash))
                     .await
                     .unwrap();
+                tokio::time::sleep(cool_off).await;
             }
         });
 
@@ -112,8 +115,8 @@ impl Command {
             let combined_result =
                 CombinedResult { block_number, new_payload_result, fcu_latency, total_latency };
 
-            // current duration since the start of the benchmark
-            let current_duration = total_benchmark_duration.elapsed();
+            // current duration since the start of the benchmark minus the per block cool off time
+            let current_duration = total_benchmark_duration.elapsed().saturating_sub(cool_off);
 
             // convert gas used to gigagas, then compute gigagas per second
             info!(%combined_result);
