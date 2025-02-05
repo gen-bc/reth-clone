@@ -4,6 +4,7 @@ use alloy_consensus::{
 };
 use alloy_eips::{eip2718::Encodable2718, eip7702::SignedAuthorization};
 use alloy_primitives::{Address, Bytes, TxHash, TxKind, B256, U256};
+use alloy_rpc_types_eth::erc4337::TransactionConditional;
 use parking_lot::RwLock;
 use reth_node_api::{Block, BlockBody};
 use reth_optimism_evm::RethL1BlockInfo;
@@ -39,12 +40,15 @@ pub type OpTransactionPool<Client, S> = Pool<
 /// This type wraps the actual transaction and caches values that are frequently used by the pool.
 /// For payload building this lazily tracks values that are required during payload building:
 ///  - Estimated compressed size of this transaction
+///  - Optional conditional associated to this transaction.
 #[derive(Debug, Clone, derive_more::Deref)]
 pub struct OpPooledTransaction {
     #[deref]
     inner: EthPooledTransaction<OpTransactionSigned>,
     /// The estimated size of this transaction, lazily computed.
     estimated_tx_compressed_size: OnceLock<u64>,
+    /// Optional conditional associated to this transaction.
+    conditional: Option<TransactionConditional>,
 }
 
 impl OpPooledTransaction {
@@ -53,6 +57,7 @@ impl OpPooledTransaction {
         Self {
             inner: EthPooledTransaction::new(transaction, encoded_length),
             estimated_tx_compressed_size: Default::default(),
+            conditional: None,
         }
     }
 
@@ -64,6 +69,17 @@ impl OpPooledTransaction {
             op_alloy_flz::tx_estimated_size_fjord(&self.inner.transaction().encoded_2718())
         })
     }
+
+    /// Conditional setter.
+    pub fn with_conditional(mut self, conditional: TransactionConditional) -> Self {
+        self.conditional = Some(conditional);
+        self
+    }
+
+    /// Conditional getter.
+    pub fn conditional(&self) -> Option<&TransactionConditional> {
+        self.conditional.as_ref()
+    }
 }
 
 impl From<Recovered<op_alloy_consensus::OpPooledTransaction>> for OpPooledTransaction {
@@ -73,6 +89,7 @@ impl From<Recovered<op_alloy_consensus::OpPooledTransaction>> for OpPooledTransa
         Self {
             inner: EthPooledTransaction::new(tx, encoded_len),
             estimated_tx_compressed_size: Default::default(),
+            conditional: None,
         }
     }
 }
